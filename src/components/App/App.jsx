@@ -5,14 +5,15 @@ import { TaskList } from '../TaskList/TaskList';
 import css from './App.module.css';
 import { useEffect } from 'react';
 import { fetchTasks } from '../../redux/operations';
+import { selectError, selectIsLoading } from '../../redux/selectors';
 
 export default function App() {
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(fetchTasks());
   }, [dispatch]);
-  const isLoading = useSelector(state => state.tasks.isLoading);
-  const error = useSelector(state => state.tasks.error);
+  const isLoading = useSelector(selectIsLoading);
+  const error = useSelector(selectError);
   return (
     <div className={css.container}>
       <AppBar />
