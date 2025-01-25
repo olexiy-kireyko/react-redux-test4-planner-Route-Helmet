@@ -1,25 +1,51 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { AppBar } from '../AppBar/AppBar';
-import { TaskForm } from '../TaskForm/TaskForm';
-import { TaskList } from '../TaskList/TaskList';
-import css from './App.module.css';
-import { useEffect } from 'react';
-import { fetchTasks } from '../../redux/operations';
-import { selectError, selectIsLoading } from '../../redux/selectors';
+import { useEffect, lazy } from 'react';
+import { Route, Routes } from 'react-router-dom';
+import { Layout } from '../Layout';
+import { PrivateRoute } from '../PrivateRoute';
+import { RestrictedRoute } from '../RestrictedRoute';
+import { refreshUser } from '../../redux/auth/operations';
+import { selectIsRefreshing } from '../../redux/auth/selectors';
+const HomePage = lazy(() => import('../../pages/HomePage/HomePage'));
+const RegisterPage = lazy(() =>
+  import('../../pages/RegisterPage/RegisterPage')
+);
+const LoginPage = lazy(() => import('../../pages/LoginPage/LoginPage'));
+const TasksPage = lazy(() => import('../../pages/TasksPage/TasksPage'));
 
 export default function App() {
   const dispatch = useDispatch();
+  const isRefreshing = useSelector(selectIsRefreshing);
+
   useEffect(() => {
-    dispatch(fetchTasks());
+    dispatch(refreshUser());
   }, [dispatch]);
-  const isLoading = useSelector(selectIsLoading);
-  const error = useSelector(selectError);
-  return (
-    <div className={css.container}>
-      <AppBar />
-      <TaskForm />
-      {isLoading && !error && <b>Request in progress...</b>}
-      <TaskList />
-    </div>
+
+  return isRefreshing ? (
+    <b>Refreshing user...</b>
+  ) : (
+    <Layout>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route
+          path="/register"
+          element={
+            <RestrictedRoute redirectTo="/tasks" component={<RegisterPage />} />
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <RestrictedRoute redirectTo="/tasks" component={<LoginPage />} />
+          }
+        />
+        <Route
+          path="/tasks"
+          element={
+            <PrivateRoute redirectTo="/login" component={<TasksPage />} />
+          }
+        />
+      </Routes>
+    </Layout>
   );
 }
